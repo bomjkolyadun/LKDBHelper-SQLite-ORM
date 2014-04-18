@@ -37,6 +37,11 @@
     //[[self getUsingLKDBHelper] createTableWithModelClass:self];
 }
 
++ (NSString*)sqlModules
+{
+    return @"fts4";
+}
+
 // 将要插入数据库
 +(BOOL)dbWillInsert:(NSObject *)entity
 {

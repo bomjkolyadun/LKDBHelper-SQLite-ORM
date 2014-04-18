@@ -34,6 +34,8 @@
 //return multi primary key    返回联合主键
 +(NSArray*) getPrimaryKeyUnionArray;
 
++ (NSString*)sqlModules;
+
 @property int rowid;
 
 /**

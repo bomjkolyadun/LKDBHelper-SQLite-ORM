@@ -46,6 +46,11 @@ static char LKModelBase_Key_RowID;
     return nil;
 }
 
++ (NSDictionary*)sqlModules
+{
+    return nil;
+}
+
 +(void)columnAttributeWithProperty:(LKDBProperty *)property
 {
     //overwrite

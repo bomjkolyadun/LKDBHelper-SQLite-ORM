@@ -145,7 +145,7 @@
     
     //查询 单个 列   search single column
     addText(@"只获取name那列的值   search with column 'name' results");
-    NSArray* nameArray = [LKTest searchColumn:@"name" where:nil orderBy:nil offset:0 count:0];
+    NSArray* nameArray = [LKTest searchColumn:@"name" where:@"name MATCH zhan*" orderBy:nil offset:0 count:0];
     addText(@"%@",[nameArray componentsJoinedByString:@","]);
     
     addText(@"休息2秒 开始  为了说明 是异步插入的\n"
@@ -166,7 +166,7 @@
         sleep(1);
 
         //修改    update
-        LKTest* test2 = [array objectAtIndex:0];
+        LKTest* test2 = [array firstObject];
         test2.name = @"wang wu";
 
         [globalHelper updateToDB:test2 where:nil];

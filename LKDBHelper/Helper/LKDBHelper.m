@@ -300,6 +300,7 @@ return NO;}
         }
     }];
 }
+
 -(BOOL)createTableWithModelClass:(Class)modelClass
 {
     checkClassIsInvalid(modelClass);
@@ -412,7 +413,16 @@ return NO;}
             }
         }
     }
-    NSString* createTableSQL = [NSString stringWithFormat:@"CREATE TABLE IF NOT EXISTS %@(%@%@)",tableName,table_pars,pksb];
+    NSString* createTableSQL = nil;
+    NSString* modules = [modelClass sqlModules];
+    if (modules.length == 0)
+    {
+        createTableSQL = [NSString stringWithFormat:@"CREATE TABLE IF NOT EXISTS %@(%@%@)",tableName,table_pars,pksb];
+    }
+    else
+    {
+        createTableSQL = [NSString stringWithFormat:@"CREATE VIRTUAL TABLE IF NOT EXISTS %@ USING %@(%@%@)",tableName, modules, table_pars, pksb];
+    }
     
     BOOL isCreated = [self executeSQL:createTableSQL arguments:nil];
     
@@ -585,6 +595,7 @@ return NO;}
         [sql appendFormat:@" limit %d offset %d",INT_MAX,offset];
     }
 }
+
 - (NSMutableArray *)executeOneColumnResult:(FMResultSet *)set
 {
     NSMutableArray* array = [NSMutableArray arrayWithCapacity:0];
