@@ -1,6 +1,6 @@
 //
 //  LKTestModels.m
-//  LKDBHelper
+//  LKDBContext
 //
 //  Created by upin on 13-7-12.
 //  Copyright (c) 2013年 ljh. All rights reserved.
@@ -34,7 +34,7 @@
     [self setTableColumnName:@"MyDate" bindingPropertyName:@"date"];
     
     //You can create a table here
-    //[[self getUsingLKDBHelper] createTableWithModelClass:self];
+    //[[self getUsingLKDBContext] createTableWithModelClass:self];
 }
 
 + (NSString*)sqlModules
@@ -43,15 +43,15 @@
 }
 
 // 将要插入数据库
-+(BOOL)dbWillInsert:(NSObject *)entity
+-(BOOL)dbWillInsert:(NSObject *)entity
 {
-    LKErrorLog(@"will insert : %@",NSStringFromClass(self));
+    LKErrorLog(@"will insert : %@",NSStringFromClass([self class]));
     return YES;
 }
 //已经插入数据库
-+(void)dbDidInserted:(NSObject *)entity result:(BOOL)result
+-(void)dbDidInsert:(NSObject *)entity result:(BOOL)result
 {
-    LKErrorLog(@"did insert : %@",NSStringFromClass(self));
+    LKErrorLog(@"did insert : %@",NSStringFromClass([self class]));
 }
 
 // 重载    返回自己处理过的 要插入数据库的值
@@ -61,7 +61,7 @@
     {
         if(self.address == nil)
             return @"";
-        [LKTestForeign insertToDB:self.address];
+        [self.context insertToDB:@[self.address]];
         return @(self.address.addid);
     }
     return nil;
@@ -73,7 +73,7 @@
     {
         self.address = nil;
         
-        NSMutableArray* array  = [LKTestForeign searchWithWhere:[NSString stringWithFormat:@"addid = %d",[value intValue]] orderBy:nil offset:0 count:1];
+        NSMutableArray* array  = [self.context search:[self class] where:[NSString stringWithFormat:@"addid = %d",[value intValue]] orderBy:nil offset:0 count:1];
         
         if(array.count>0)
             self.address = [array objectAtIndex:0];
@@ -171,7 +171,7 @@
 
 
 
-@implementation NSObject(PrintSQL)
+@implementation LKManagedObject(PrintSQL)
 
 +(NSString *)getCreateTableSQL
 {

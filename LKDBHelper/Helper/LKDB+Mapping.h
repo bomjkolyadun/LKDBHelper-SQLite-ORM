@@ -1,14 +1,15 @@
 //
 //  LKDBProperty+KeyMapping.h
-//  LKDBHelper
+//  LKDBContext
 //
 //  Created by upin on 13-6-17.
 //  Copyright (c) 2013年 ljh. All rights reserved.
 //
 
 #import "LKDBUtils.h"
+#import "LKManagedObject.h"
 
-@interface NSObject(TableMapping)
+@interface LKManagedObject(TableMapping)
 
 /**
  *	@brief Overwrite in your models if your property names don't match your Table Column names.

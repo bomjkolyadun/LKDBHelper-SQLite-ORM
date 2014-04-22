@@ -1,13 +1,13 @@
 //
 //  LKDBProperty+KeyMapping.m
-//  LKDBHelper
+//  LKDBContext
 //
 //  Created by upin on 13-6-17.
 //  Copyright (c) 2013年 ljh. All rights reserved.
 //
 
 #import "LKDB+Mapping.h"
-#import "NSObject+LKModel.h"
+#import "LKManagedObject.h"
 
 #pragma mark- 声明
 @interface LKDBProperty()
@@ -66,7 +66,7 @@
 }
 @end
 #pragma mark- NSObject - TableMapping
-@implementation NSObject(TableMapping)
+@implementation LKManagedObject(TableMapping)
 +(NSDictionary *)getTableMapping
 {
     return nil;

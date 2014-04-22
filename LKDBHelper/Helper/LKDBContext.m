@@ -1,5 +1,5 @@
 //
-//  LKDBHelper.m
+//  LKDBContext.m
 //  upin
 //
 //  Created by Fanhuan on 12-12-6.
@@ -7,7 +7,7 @@
 //
 
 
-#import "LKDBHelper.h"
+#import "LKDBContext.h"
 
 #define checkClassIsInvalid(modelClass)if([LKDBUtils checkStringIsEmpty:[modelClass getTableName]]){\
 LKErrorLog(@"model class name %@ table name is invalid!",NSStringFromClass(modelClass));\
@@ -15,93 +15,79 @@ return NO;}
 
 #define checkModelIsInvalid(model)if(model == nil){LKErrorLog(@"model is nil");return NO;}checkClassIsInvalid(model.class)
 
-@interface LKDBHelper()
-@property(unsafe_unretained,nonatomic)FMDatabase* usingdb;
-@property(strong,nonatomic)FMDatabaseQueue* bindingQueue;
-@property(copy,nonatomic)NSString* dbname;
+@interface LKDBContext()
 
-@property(strong,nonatomic)NSRecursiveLock* threadLock;
-@property(strong,nonatomic)LKTableManager* tableManager;
+@property (copy, nonatomic) NSString* databaseName;
+@property (strong, nonatomic) NSRecursiveLock* threadLock;
+@property (strong, nonatomic) LKTableManager* tableManager;
+
 @end
 
-@implementation LKDBHelper
+@implementation LKDBContext
 
-#pragma mark- deprecated
-+(LKDBHelper *)sharedDBHelper
-{return [LKDBHelper getUsingLKDBHelper];}
-#pragma mark-
-
--(id)initWithDBName:(NSString *)dbname
+-(id)initWithDBName:(NSString *)databaseName
 {
     self = [super init];
-    if (self) {
-        self.threadLock = [[NSRecursiveLock alloc]init];
-        [self setDBName:dbname];
-    }
-    return self;
-}
-- (id)init
-{
-    return [self initWithDBName:@"LKDB"];
-}
--(void)setDBName:(NSString *)fileName
-{
-    if([self.dbname isEqualToString:fileName] == NO)
+    if (self != nil)
     {
-        if([fileName hasSuffix:@".db"] == NO)
-        {
-            self.dbname = [NSString stringWithFormat:@"%@.db",fileName];
-        }
-        else
-        {
-            self.dbname = fileName;
-        }
-        [self.bindingQueue close];
-        self.bindingQueue = [[FMDatabaseQueue alloc]initWithPath:[LKDBUtils getPathForDocuments:self.dbname inDir:@"db"]];
-        
+        self.threadLock = [[NSRecursiveLock alloc] init];
+        self.tableManager = [[LKTableManager alloc] initWithLKDBContext:self];
+        NSString* filename = [self fileNameForDatabaseName:databaseName];
+        self.databaseName = filename;
+        _bindingQueue = [[FMDatabaseQueue alloc] initWithPath:[LKDBUtils getPathForDocuments:filename inDir:@"db"]];
 #ifdef DEBUG
-        //debug 模式下  打印错误日志
         [_bindingQueue inDatabase:^(FMDatabase *db) {
             db.logsErrors = YES;
         }];
 #endif
-        self.tableManager = [[LKTableManager alloc]initWithLKDBHelper:self];
     }
+    return self;
 }
 
-#pragma mark- core
--(void)executeDB:(void (^)(FMDatabase *db))block
+- (id)init
 {
-    [_threadLock lock];
-    if(self.usingdb != nil)
+    return [self initWithDBName:@"LKDB"];
+}
+
+#pragma mark - core
+
+- (NSString*)fileNameForDatabaseName:(NSString *)databaseName
+{
+    NSString* filename = nil;
+    if([databaseName hasSuffix:@".db"] == NO)
     {
-        block(self.usingdb);
+        filename = [NSString stringWithFormat:@"%@.db",databaseName];
     }
     else
     {
-        [_bindingQueue inDatabase:^(FMDatabase *db) {
-            self.usingdb = db;
-            block(db);
-            self.usingdb = nil;
-        }];
+        filename = databaseName;
     }
-    [_threadLock unlock];
+    return filename;
 }
+
 -(BOOL)executeSQL:(NSString *)sql arguments:(NSArray *)args
 {
     __block BOOL execute = NO;
-    [self executeDB:^(FMDatabase *db) {
-        if(args.count>0)
-            execute = [db executeUpdate:sql withArgumentsInArray:args];
+    [self.bindingQueue inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        BOOL result = NO;
+        if (args.count > 0)
+        {
+            result = [db executeUpdate:sql withArgumentsInArray:args];
+        }
         else
-            execute = [db executeUpdate:sql];
+        {
+            result = [db executeUpdate:sql];
+        }
+        execute = result;
+        *rollback = !result;
     }];
     return execute;
 }
+
 -(NSString *)executeScalarWithSQL:(NSString *)sql arguments:(NSArray *)args
 {
     __block NSString* scalar = nil;
-    [self executeDB:^(FMDatabase *db) {
+    [self.bindingQueue inDatabase:^(FMDatabase *db){
         FMResultSet* set = nil;
         if(args.count>0)
             set = [db executeQuery:sql withArgumentsInArray:args];
@@ -187,7 +173,7 @@ return NO;}
     return wherekey;
 }
 //where sql statements about model primary keys
--(NSMutableString*)primaryKeyWhereSQLWithModel:(NSObject*)model addPValues:(NSMutableArray*)addPValues
+-(NSMutableString*)primaryKeyWhereSQLWithModel:(LKManagedObject*)model addPValues:(NSMutableArray*)addPValues
 {
     LKModelInfos* infos = [model.class getModelInfos];
     NSArray* primaryKeys = infos.primaryKeys;
@@ -233,28 +219,28 @@ return NO;}
 -(void)dealloc
 {
     [self.bindingQueue close];
-    self.usingdb = nil;
-    self.bindingQueue = nil;
-    self.dbname = nil;
-    self.tableManager = nil;
-    self.threadLock = nil;
 }
 @end
-@implementation LKDBHelper(DatabaseManager)
+@implementation LKDBContext(DatabaseManager)
 
 -(void)dropAllTable
 {
-    [self executeDB:^(FMDatabase *db) {
+    [self.bindingQueue inTransaction:^(FMDatabase *db, BOOL *rollback) {
         FMResultSet* set = [db executeQuery:@"select name from sqlite_master where type='table'"];
         NSMutableArray* dropTables = [NSMutableArray arrayWithCapacity:0];
         while ([set next]) {
             [dropTables addObject:[set stringForColumnIndex:0]];
         }
         [set close];
-        
+
         for (NSString* tableName in dropTables) {
             NSString* dropTable = [NSString stringWithFormat:@"drop table %@",tableName];
-            [db executeUpdate:dropTable];
+            BOOL result = [db executeUpdate:dropTable];
+            if (!result)
+            {
+                *rollback = !result;
+                break;
+            }
         }
     }];
     
@@ -278,7 +264,7 @@ return NO;}
 {
     NSString* tableName = [clazz getTableName];
     LKModelInfos* infos = [clazz getModelInfos];
-    [self executeDB:^(FMDatabase *db) {
+    [self.bindingQueue inDatabase:^(FMDatabase *db) {
         NSString* select = [NSString stringWithFormat:@"select * from %@ limit 0",tableName];
         FMResultSet* set = [db executeQuery:select];
         NSArray*  columnArray = set.columnNameToIndexMap.allKeys;
@@ -287,14 +273,14 @@ return NO;}
             LKDBProperty* p = [infos objectWithIndex:i];
             if([p.sqlColumnName.lowercaseString isEqualToString:@"rowid"])
                 continue;
-            
+
             if([columnArray indexOfObject:p.sqlColumnName.lowercaseString] == NSNotFound)
             {
                 if([clazz getAutoUpdateSqlColumn])
                     [clazz tableUpdateAddColumnWithName:p.sqlColumnName sqliteType:p.sqlColumnType];
                 else
                     [clazz removePropertyWithColumnName:p.sqlColumnName];
-                
+
                 [clazz tableDidCreatedOrUpdated];
             }
         }
@@ -437,7 +423,7 @@ return NO;}
 -(BOOL)getTableCreatedWithClass:(Class)modelClass
 {
     __block BOOL isTableCreated = NO;
-    [self executeDB:^(FMDatabase *db) {
+    [self.bindingQueue inDatabase:^(FMDatabase *db) {
         FMResultSet* set = [db executeQuery:@"select count(name) from sqlite_master where type='table' and name=?",[modelClass getTableName]];
         [set next];
         if([set intForColumnIndex:0]>0)
@@ -450,9 +436,9 @@ return NO;}
 }
 @end
 
-@implementation LKDBHelper(DatabaseExecute)
+@implementation LKDBContext(DatabaseExecute)
 
--(id)modelValueWithProperty:(LKDBProperty *)property model:(NSObject *)model {
+-(id)modelValueWithProperty:(LKDBProperty *)property model:(LKManagedObject *)model {
     id value = nil;
     if(property.isUserCalculate)
     {
@@ -473,7 +459,7 @@ return NO;}
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0),block);
 }
 #pragma mark - row count operation
--(int)rowCount:(Class)modelClass where:(id)where
+-(NSInteger)rowCount:(Class)modelClass where:(id)where
 {
     return [self rowCountBase:modelClass where:where];
 }
@@ -556,7 +542,7 @@ return NO;}
     [self sqlString:query AddOder:orderBy offset:offset count:count];
     
     __block NSMutableArray* results = nil;
-    [self executeDB:^(FMDatabase *db) {
+    [self.bindingQueue inDatabase:^(FMDatabase *db) {
         FMResultSet* set = nil;
         if(values == nil)
         {
@@ -615,7 +601,7 @@ return NO;}
     int columnCount = [set columnCount];
     while ([set next]) {
         
-        NSObject* bindingModel = [[modelClass alloc]init];
+        LKManagedObject* bindingModel = [[modelClass alloc]init];
         bindingModel.rowid = [set intForColumnIndex:0];
         
         for (int i=1; i<columnCount; i++) {
@@ -637,14 +623,14 @@ return NO;}
     return array;
 }
 #pragma mark- insert operation
--(BOOL)insertToDB:(NSObject *)model
+-(BOOL)insertToDB:(NSArray*)models
 {
-    return [self insertBase:model];
+    return [self insertBase:models];
 }
--(void)insertToDB:(NSObject *)model callback:(void (^)(BOOL))block
+-(void)insertToDB:(NSArray*)models callback:(void (^)(BOOL))block
 {
     [self asyncBlock:^{
-        BOOL result = [self insertBase:model];
+        BOOL result = [self insertBase:models];
         if(block != nil)
         {
             block(result);
@@ -655,7 +641,7 @@ return NO;}
 {
     if([self isExistsModel:model]==NO)
     {
-        return [self insertToDB:model];
+        return [self insertToDB:@[model]];
     }
     return NO;
 }
@@ -672,80 +658,85 @@ return NO;}
         }
     }];
 }
--(BOOL)insertBase:(NSObject*)model{
-    
-    checkModelIsInvalid(model);
-    
+
+- (NSDictionary*)keyValueDictionaryForModel:(LKManagedObject*)model
+{
     Class modelClass = model.class;
-    
     //callback
-    if([modelClass dbWillInsert:model]==NO)
+    if([model dbShouldInsert:model]==NO)
     {
         LKErrorLog(@"your cancel %@ insert",model);
         return NO;
     }
-    
     //--
     LKModelInfos* infos = [modelClass getModelInfos];
-    
-    NSMutableString* insertKey = [NSMutableString stringWithCapacity:0];
-    NSMutableString* insertValuesString = [NSMutableString stringWithCapacity:0];
-    NSMutableArray* insertValues = [NSMutableArray arrayWithCapacity:infos.count];
-    
-    
+
+    NSMutableDictionary* dict = [NSMutableDictionary dictionaryWithCapacity:infos.count];
     LKDBProperty* primaryProperty = [model singlePrimaryKeyProperty];
-    
+
     for (int i=0; i<infos.count; i++) {
-        
+
         LKDBProperty* property = [infos objectWithIndex:i];
         if([LKDBUtils checkStringIsEmpty:property.sqlColumnName])
             continue;
-        
+
         if([property isEqual:primaryProperty])
         {
             if([model singlePrimaryKeyValueIsEmpty])
                 continue;
         }
-        
-        if(insertKey.length>0)
-        {
-            [insertKey appendString:@","];
-            [insertValuesString appendString:@","];
-        }
-        
-        [insertKey appendString:property.sqlColumnName];
-        [insertValuesString appendString:@"?"];
-        
+
         id value = [self modelValueWithProperty:property model:model];
-        
-        [insertValues addObject:value];
+        [dict setObject:value forKey:property.sqlColumnName];
     }
-    
-    //拼接insertSQL 语句  采用 replace 插入
-    NSString* insertSQL = [NSString stringWithFormat:@"replace into %@(%@) values(%@)",[modelClass getTableName],insertKey,insertValuesString];
-    
+    return dict;
+}
+
+- (NSArray*)placeholderArrayForKeys:(NSArray*)keys
+{
+    NSMutableArray* placeholdersArray = [NSMutableArray arrayWithCapacity:keys.count];
+    for (NSInteger i = 0; i < keys.count; i++)
+    {
+        [placeholdersArray addObject:@"?"];
+    }
+    return placeholdersArray;
+}
+
+- (NSString*)insertSQLForKeys:(NSArray*)keys forModel:(LKManagedObject*)model
+{
+    Class modelClass = [model class];
+    NSArray *placeholdersArray = [self placeholderArrayForKeys:keys];
+    NSString* insertSQL = [NSString stringWithFormat:@"replace into %@(%@) values(%@)",[modelClass getTableName],[keys componentsJoinedByString:@","],[placeholdersArray componentsJoinedByString:@","]];
+    return insertSQL;
+}
+
+-(BOOL)insertBase:(NSArray*)models
+{
     __block BOOL execute = NO;
     __block sqlite_int64 lastInsertRowId = 0;
-    
-    [self executeDB:^(FMDatabase *db) {
-        execute = [db executeUpdate:insertSQL withArgumentsInArray:insertValues];
-        lastInsertRowId= db.lastInsertRowId;
+    [self.bindingQueue inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        for (LKManagedObject* model in models)
+        {
+            NSDictionary* keyValues = [self keyValueDictionaryForModel:model];
+            NSArray* allKeys = keyValues.allKeys;
+            NSString* insertSQL = [self insertSQLForKeys:allKeys forModel:model];
+            NSArray* allValues = [keyValues objectsForKeys:allKeys notFoundMarker:[NSNull null]];
+            execute = [db executeUpdate:insertSQL withArgumentsInArray:allValues];
+            lastInsertRowId= db.lastInsertRowId;
+            model.rowid = (int)lastInsertRowId;
+            [model dbDidInsertWithResult:execute];
+            *rollback = !execute;
+        }
     }];
-    
-    model.rowid = (int)lastInsertRowId;
-    if(execute == NO)
-        LKErrorLog(@"database insert fail %@, sql:%@",NSStringFromClass(modelClass),insertSQL);
-    
-    //callback
-    [modelClass dbDidInserted:model result:execute];
     return execute;
 }
+
 #pragma mark- update operation
--(BOOL)updateToDB:(NSObject *)model where:(id)where
+-(BOOL)updateToDB:(LKManagedObject *)model where:(id)where
 {
     return [self updateToDBBase:model where:where];
 }
--(void)updateToDB:(NSObject *)model where:(id)where callback:(void (^)(BOOL))block
+-(void)updateToDB:(LKManagedObject *)model where:(id)where callback:(void (^)(BOOL))block
 {
     [self asyncBlock:^{
         BOOL result = [self updateToDBBase:model where:where];
@@ -753,14 +744,14 @@ return NO;}
             block(result);
     }];
 }
--(BOOL)updateToDBBase:(NSObject *)model where:(id)where
+-(BOOL)updateToDBBase:(LKManagedObject *)model where:(id)where
 {
     checkModelIsInvalid(model);
     
     Class modelClass = model.class;
     
     //callback
-    if([modelClass dbWillUpdate:model]==NO)
+    if([model dbShouldUpdate:model]==NO)
     {
         LKErrorLog(@"you cancel %@ update.",model);
         return NO;
@@ -801,7 +792,7 @@ return NO;}
     }
     else if(model.rowid > 0)
     {
-        [updateSQL appendFormat:@" rowid=%d",model.rowid];
+        [updateSQL appendFormat:@" rowid=%ld",(long)model.rowid];
     }
     else
     {
@@ -822,7 +813,7 @@ return NO;}
     }
     
     //callback
-    [modelClass dbDidUpdated:model result:execute];
+    [model dbDidUpdateWithResult:execute];
     
     return execute;
 }
@@ -841,11 +832,11 @@ return NO;}
     return execute;
 }
 #pragma mark - delete operation
--(BOOL)deleteToDB:(NSObject *)model
+-(BOOL)deleteToDB:(LKManagedObject *)model
 {
     return [self deleteToDBBase:model];
 }
--(void)deleteToDB:(NSObject *)model callback:(void (^)(BOOL))block
+-(void)deleteToDB:(LKManagedObject *)model callback:(void (^)(BOOL))block
 {
     [self asyncBlock:^{
         BOOL isDeleted = [self deleteToDBBase:model];
@@ -854,14 +845,14 @@ return NO;}
     }];
 }
 
--(BOOL)deleteToDBBase:(NSObject *)model
+-(BOOL)deleteToDBBase:(LKManagedObject *)model
 {
     checkModelIsInvalid(model);
     
     Class modelClass = model.class;
     
     //callback
-    if([modelClass dbWillDelete:model] == NO)
+    if([model dbShouldDelete:model] == NO)
     {
         LKErrorLog(@"you cancel %@ delete",model);
         return NO;
@@ -871,7 +862,7 @@ return NO;}
     NSMutableArray* parsArray = [NSMutableArray array];
     if(model.rowid > 0)
     {
-        [deleteSQL appendFormat:@"rowid = %d",model.rowid];
+        [deleteSQL appendFormat:@"rowid = %ld",(long)model.rowid];
     }
     else
     {
@@ -890,7 +881,7 @@ return NO;}
     BOOL execute = [self executeSQL:deleteSQL arguments:parsArray];
     
     //callback
-    [modelClass dbDidDeleted:model result:execute];
+    [model dbDidDeleteWithResult:execute];
     
     return execute;
 }
@@ -920,12 +911,12 @@ return NO;}
 }
 
 #pragma mark - other operation
--(BOOL)isExistsModel:(NSObject *)model
+-(BOOL)isExistsModel:(LKManagedObject *)model
 {
     checkModelIsInvalid(model);
     NSString* pwhere = nil;
     if(model.rowid>0){
-        pwhere = [NSString stringWithFormat:@"rowid=%d",model.rowid];
+        pwhere = [NSString stringWithFormat:@"rowid=%ld",(long)model.rowid];
     }
     else{
         pwhere = [self primaryKeyWhereSQLWithModel:model addPValues:nil];
@@ -948,24 +939,24 @@ return NO;}
 
 #pragma mark- clear operation
 
-+(void)clearTableData:(Class)modelClass
+- (void)clearTableData:(Class)modelClass
 {
-    [[modelClass getUsingLKDBHelper] executeDB:^(FMDatabase *db) {
+    [self.bindingQueue inTransaction:^(FMDatabase *db, BOOL *rollback) {
         NSString* delete = [NSString stringWithFormat:@"DELETE FROM %@",[modelClass getTableName]];
-        [db executeUpdate:delete];
+        *rollback = ![db executeUpdate:delete];
     }];
 }
 
-+(void)clearNoneImage:(Class)modelClass columns:(NSArray *)columns
+- (void)clearNoneImage:(Class)modelClass columns:(NSArray *)columns
 {
     [self clearFileWithTable:modelClass columns:columns type:1];
 }
-+(void)clearNoneData:(Class)modelClass columns:(NSArray *)columns
+- (void)clearNoneData:(Class)modelClass columns:(NSArray *)columns
 {
     [self clearFileWithTable:modelClass columns:columns type:2];
 }
 #define LKTestDirFilename @"LKTestDirFilename111"
-+(void)clearFileWithTable:(Class)modelClass columns:(NSArray*)columns type:(int)type
+- (void)clearFileWithTable:(Class)modelClass columns:(NSArray*)columns type:(int)type
 {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
         
@@ -1000,7 +991,7 @@ return NO;}
         }
         NSString* querySql = [NSString stringWithFormat:@"select %@ from %@ where %@",seleteColumn,[modelClass getTableName],whereStr];
         __block NSArray* dbfiles;
-        [[modelClass getUsingLKDBHelper] executeDB:^(FMDatabase *db) {
+        [self.bindingQueue inDatabase:^(FMDatabase *db) {
             NSMutableArray* tempfiles = [NSMutableArray arrayWithCapacity:6];
             FMResultSet* set = [db executeQuery:querySql];
             while ([set next]) {

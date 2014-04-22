@@ -1,5 +1,5 @@
 //
-// Prefix header for all source files of the 'LKDBHelper' target in the 'LKDBHelper' project
+// Prefix header for all source files of the 'LKDBContext' target in the 'LKDBContext' project
 //
 
 #import <Availability.h>

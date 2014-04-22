@@ -1,5 +1,5 @@
 //
-//  LKDBHelper.h
+//  LKDBContext.h
 //  upin
 //
 //  Created by Fanhuan on 12-12-6.
@@ -15,34 +15,23 @@
 #import "LKDB+Manager.h"
 #import "LKDB+Mapping.h"
 
-#import "NSObject+LKModel.h"
-#import "NSObject+LKDBHelper.h"
+#import "LKManagedObject.h"
 
-@interface LKDBHelper : NSObject
+@interface LKDBContext : NSObject
 
-// you can use [LKDBHelper getUsingLKDBHelper]
-#pragma mark- deprecated
-+(LKDBHelper*)sharedDBHelper DEPRECATED_ATTRIBUTE;
-#pragma mark-
-
+@property (strong, nonatomic, readonly) FMDatabaseQueue* bindingQueue;
 
 -(id)initWithDBName:(NSString*)dbname;
 
 /**
- *	@brief  change database , filepath the use of : "documents/db/" + fileName + ".db"
- */
--(void)setDBName:(NSString*)fileName;
-
-/**
  *	@brief  execute database operations synchronously,not afraid of recursive deadlock  同步执行数据库操作 可递归调用
  */
--(void)executeDB:(void (^)(FMDatabase *db))block;
 
 -(BOOL)executeSQL:(NSString *)sql arguments:(NSArray *)args;
 -(NSString *)executeScalarWithSQL:(NSString *)sql arguments:(NSArray *)args;
 @end
 
-@interface LKDBHelper(DatabaseManager)
+@interface LKDBContext(DatabaseManager)
 
 //get table has created
 -(BOOL)getTableCreatedWithClass:(Class)model;
@@ -58,7 +47,7 @@
 
 @end
 
-@interface LKDBHelper(DatabaseExecute)
+@interface LKDBContext(DatabaseExecute)
 /**
  *	@brief	The number of rows query table
  *
@@ -67,7 +56,7 @@
  *
  *	@return	rows number
  */
--(int)rowCount:(Class)modelClass where:(id)where;
+-(NSInteger)rowCount:(Class)modelClass where:(id)where;
 -(void)rowCount:(Class)modelClass where:(id)where callback:(void(^)(int rowCount))callback;
 
 /**
@@ -102,8 +91,8 @@
  *
  *	@return	the inserted was successful
  */
--(BOOL)insertToDB:(NSObject*)model;
--(void)insertToDB:(NSObject*)model callback:(void(^)(BOOL result))block;
+-(BOOL)insertToDB:(NSArray*)models;
+-(void)insertToDB:(NSArray*)models callback:(void(^)(BOOL result))block;
 
 /**
  *	@brief	insert when the entity primary key does not exist
@@ -124,8 +113,8 @@
  *
  *	@return	the updated was successful
  */
--(BOOL)updateToDB:(NSObject *)model where:(id)where;
--(void)updateToDB:(NSObject *)model where:(id)where callback:(void (^)(BOOL result))block;
+-(BOOL)updateToDB:(LKManagedObject *)model where:(id)where;
+-(void)updateToDB:(LKManagedObject *)model where:(id)where callback:(void (^)(BOOL result))block;
 -(BOOL)updateToDB:(Class)modelClass set:(NSString*)sets where:(id)where;
 /**
  *	@brief	delete table
@@ -135,8 +124,8 @@
  *
  *	@return	the deleted was successful
  */
--(BOOL)deleteToDB:(NSObject*)model;
--(void)deleteToDB:(NSObject*)model callback:(void(^)(BOOL result))block;
+-(BOOL)deleteToDB:(LKManagedObject*)model;
+-(void)deleteToDB:(LKManagedObject*)model callback:(void(^)(BOOL result))block;
 
 /**
  *	@brief	delete table with "where" constraint
@@ -166,7 +155,7 @@
  *
  *	@param 	modelClass 	entity class
  */
-+(void)clearTableData:(Class)modelClass;
+-(void)clearTableData:(Class)modelClass;
 
 /**
  *	@brief	Clear Unused Data File
@@ -175,7 +164,7 @@
  *	@param 	modelClass      entity class
  *	@param 	columns         UIImage or NSData Column Name
  */
-+(void)clearNoneImage:(Class)modelClass columns:(NSArray*)columns;
-+(void)clearNoneData:(Class)modelClass columns:(NSArray*)columns;
+-(void)clearNoneImage:(Class)modelClass columns:(NSArray*)columns;
+-(void)clearNoneData:(Class)modelClass columns:(NSArray*)columns;
 
 @end

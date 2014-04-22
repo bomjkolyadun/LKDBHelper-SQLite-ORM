@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0A06A43E1905928B00F226A1 /* LKManagedObject.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A06A43D1905928B00F226A1 /* LKManagedObject.m */; };
 		5303B79B178FEFB5007731A0 /* LKTestModels.m in Sources */ = {isa = PBXBuildFile; fileRef = 5303B79A178FEFB5007731A0 /* LKTestModels.m */; };
-		5311E11C1762DEFE00ADBB7D /* NSObject+LKDBHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 5311E11B1762DEFE00ADBB7D /* NSObject+LKDBHelper.m */; };
 		53226E01171B9E5A00B1A490 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 53226E00171B9E5A00B1A490 /* UIKit.framework */; };
 		53226E03171B9E5A00B1A490 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 53226E02171B9E5A00B1A490 /* Foundation.framework */; };
 		53226E05171B9E5B00B1A490 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 53226E04171B9E5A00B1A490 /* CoreGraphics.framework */; };
@@ -24,20 +24,19 @@
 		53226E35171BA09F00B1A490 /* FMDatabasePool.m in Sources */ = {isa = PBXBuildFile; fileRef = 53226E2D171BA09F00B1A490 /* FMDatabasePool.m */; };
 		53226E36171BA09F00B1A490 /* FMDatabaseQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = 53226E2F171BA09F00B1A490 /* FMDatabaseQueue.m */; };
 		53226E37171BA09F00B1A490 /* FMResultSet.m in Sources */ = {isa = PBXBuildFile; fileRef = 53226E31171BA09F00B1A490 /* FMResultSet.m */; };
-		53226E3F171BA16E00B1A490 /* LKDBHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 53226E3D171BA16E00B1A490 /* LKDBHelper.m */; };
+		53226E3F171BA16E00B1A490 /* LKDBContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 53226E3D171BA16E00B1A490 /* LKDBContext.m */; };
 		53226E45171BA44100B1A490 /* LKDBUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 53226E44171BA44100B1A490 /* LKDBUtils.m */; };
 		53226E47171BFB6900B1A490 /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 53226E46171BFB6900B1A490 /* libsqlite3.dylib */; };
-		53226E4A171C1F0400B1A490 /* NSObject+LKModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 53226E49171C1F0400B1A490 /* NSObject+LKModel.m */; };
 		53226E4C171C207F00B1A490 /* 41.png in Resources */ = {isa = PBXBuildFile; fileRef = 53226E4B171C207F00B1A490 /* 41.png */; };
 		534D38D51772FA5B00E24E96 /* LKDB+Manager.m in Sources */ = {isa = PBXBuildFile; fileRef = 534D38D41772FA5B00E24E96 /* LKDB+Manager.m */; };
 		534D38D81772FA6A00E24E96 /* LKDB+Mapping.m in Sources */ = {isa = PBXBuildFile; fileRef = 534D38D71772FA6A00E24E96 /* LKDB+Mapping.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0A06A43C1905928B00F226A1 /* LKManagedObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LKManagedObject.h; sourceTree = "<group>"; };
+		0A06A43D1905928B00F226A1 /* LKManagedObject.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LKManagedObject.m; sourceTree = "<group>"; };
 		5303B799178FEFB5007731A0 /* LKTestModels.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LKTestModels.h; sourceTree = "<group>"; };
 		5303B79A178FEFB5007731A0 /* LKTestModels.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LKTestModels.m; sourceTree = "<group>"; };
-		5311E11A1762DEFE00ADBB7D /* NSObject+LKDBHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSObject+LKDBHelper.h"; sourceTree = "<group>"; };
-		5311E11B1762DEFE00ADBB7D /* NSObject+LKDBHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSObject+LKDBHelper.m"; sourceTree = "<group>"; };
 		53226DFD171B9E5A00B1A490 /* LKDBHelper.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LKDBHelper.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		53226E00171B9E5A00B1A490 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		53226E02171B9E5A00B1A490 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -63,13 +62,11 @@
 		53226E2F171BA09F00B1A490 /* FMDatabaseQueue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FMDatabaseQueue.m; sourceTree = "<group>"; };
 		53226E30171BA09F00B1A490 /* FMResultSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FMResultSet.h; sourceTree = "<group>"; };
 		53226E31171BA09F00B1A490 /* FMResultSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FMResultSet.m; sourceTree = "<group>"; };
-		53226E3C171BA16E00B1A490 /* LKDBHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LKDBHelper.h; sourceTree = "<group>"; };
-		53226E3D171BA16E00B1A490 /* LKDBHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LKDBHelper.m; sourceTree = "<group>"; };
+		53226E3C171BA16E00B1A490 /* LKDBContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LKDBContext.h; sourceTree = "<group>"; };
+		53226E3D171BA16E00B1A490 /* LKDBContext.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LKDBContext.m; sourceTree = "<group>"; };
 		53226E43171BA44100B1A490 /* LKDBUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LKDBUtils.h; sourceTree = "<group>"; };
 		53226E44171BA44100B1A490 /* LKDBUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LKDBUtils.m; sourceTree = "<group>"; };
 		53226E46171BFB6900B1A490 /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
-		53226E48171C1F0400B1A490 /* NSObject+LKModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSObject+LKModel.h"; sourceTree = "<group>"; };
-		53226E49171C1F0400B1A490 /* NSObject+LKModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSObject+LKModel.m"; sourceTree = "<group>"; };
 		53226E4B171C207F00B1A490 /* 41.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 41.png; sourceTree = "<group>"; };
 		534D38D31772FA5B00E24E96 /* LKDB+Manager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "LKDB+Manager.h"; sourceTree = "<group>"; };
 		534D38D41772FA5B00E24E96 /* LKDB+Manager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "LKDB+Manager.m"; sourceTree = "<group>"; };
@@ -187,12 +184,10 @@
 		53226E39171BA10800B1A490 /* Helper */ = {
 			isa = PBXGroup;
 			children = (
-				53226E3C171BA16E00B1A490 /* LKDBHelper.h */,
-				53226E3D171BA16E00B1A490 /* LKDBHelper.m */,
-				53226E48171C1F0400B1A490 /* NSObject+LKModel.h */,
-				53226E49171C1F0400B1A490 /* NSObject+LKModel.m */,
-				5311E11A1762DEFE00ADBB7D /* NSObject+LKDBHelper.h */,
-				5311E11B1762DEFE00ADBB7D /* NSObject+LKDBHelper.m */,
+				53226E3C171BA16E00B1A490 /* LKDBContext.h */,
+				53226E3D171BA16E00B1A490 /* LKDBContext.m */,
+				0A06A43C1905928B00F226A1 /* LKManagedObject.h */,
+				0A06A43D1905928B00F226A1 /* LKManagedObject.m */,
 				53226E43171BA44100B1A490 /* LKDBUtils.h */,
 				53226E44171BA44100B1A490 /* LKDBUtils.m */,
 				534D38D31772FA5B00E24E96 /* LKDB+Manager.h */,
@@ -277,11 +272,10 @@
 				53226E34171BA09F00B1A490 /* FMDatabaseAdditions.m in Sources */,
 				53226E35171BA09F00B1A490 /* FMDatabasePool.m in Sources */,
 				53226E36171BA09F00B1A490 /* FMDatabaseQueue.m in Sources */,
+				0A06A43E1905928B00F226A1 /* LKManagedObject.m in Sources */,
 				53226E37171BA09F00B1A490 /* FMResultSet.m in Sources */,
-				53226E3F171BA16E00B1A490 /* LKDBHelper.m in Sources */,
+				53226E3F171BA16E00B1A490 /* LKDBContext.m in Sources */,
 				53226E45171BA44100B1A490 /* LKDBUtils.m in Sources */,
-				53226E4A171C1F0400B1A490 /* NSObject+LKModel.m in Sources */,
-				5311E11C1762DEFE00ADBB7D /* NSObject+LKDBHelper.m in Sources */,
 				534D38D51772FA5B00E24E96 /* LKDB+Manager.m in Sources */,
 				534D38D81772FA6A00E24E96 /* LKDB+Mapping.m in Sources */,
 				5303B79B178FEFB5007731A0 /* LKTestModels.m in Sources */,

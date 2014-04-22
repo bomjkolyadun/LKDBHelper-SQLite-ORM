@@ -1,6 +1,6 @@
 //
 //  NSObject+LKUtils.h
-//  LKDBHelper
+//  LKDBContext
 //
 //  Created by upin on 13-4-15.
 //  Copyright (c) 2013年 ljh. All rights reserved.
@@ -34,9 +34,9 @@
 
 #ifdef DEBUG
 #ifdef NSLog
-#define LKErrorLog(fmt, ...) NSLog(@"#LKDBHelper ERROR:\n" fmt,##__VA_ARGS__);
+#define LKErrorLog(fmt, ...) NSLog(@"#LKDBContext ERROR:\n" fmt,##__VA_ARGS__);
 #else
-#define LKErrorLog(fmt, ...) NSLog(@"\n#LKDBHelper ERROR: %s  [Line %d] \n" fmt, __PRETTY_FUNCTION__, __LINE__, ##__VA_ARGS__);
+#define LKErrorLog(fmt, ...) NSLog(@"\n#LKDBContext ERROR: %s  [Line %d] \n" fmt, __PRETTY_FUNCTION__, __LINE__, ##__VA_ARGS__);
 #endif
 #else
 #   define LKErrorLog(...)

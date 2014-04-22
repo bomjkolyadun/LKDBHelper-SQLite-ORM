@@ -1,15 +1,15 @@
 //
 //  LKTestModels.h
-//  LKDBHelper
+//  LKDBContext
 //
 //  Created by upin on 13-7-12.
 //  Copyright (c) 2013年 ljh. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
-#import "LKDBHelper.h"
+#import "LKDBContext.h"
 
-@interface LKTestForeign : NSObject
+@interface LKTestForeign : LKManagedObject
 @property int addid;
 @property(copy,nonatomic)NSString* address;
 @property int postcode;
@@ -17,7 +17,7 @@
 
 
 
-@interface LKTest : NSObject
+@interface LKTest : LKManagedObject
 @property(copy,nonatomic)NSString* name;
 @property NSUInteger  age;
 @property BOOL isGirl;
@@ -52,6 +52,6 @@
 @end
 
 
-@interface NSObject(PrintSQL)
+@interface LKManagedObject(PrintSQL)
 +(NSString*)getCreateTableSQL;
 @end
