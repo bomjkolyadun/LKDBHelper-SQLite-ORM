@@ -601,7 +601,7 @@ return NO;}
     int columnCount = [set columnCount];
     while ([set next]) {
         
-        LKManagedObject* bindingModel = [[modelClass alloc]init];
+        LKManagedObject* bindingModel = [[modelClass alloc]initWithContext:self];
         bindingModel.rowid = [set intForColumnIndex:0];
         
         for (int i=1; i<columnCount; i++) {
